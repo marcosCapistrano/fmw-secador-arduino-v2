@@ -131,6 +131,8 @@ void state_manager_set(state_prefs_t choice, uint32_t value) {
 
     case IS_AWARE_ENTR:
       isAwareEntr = value;
+      Serial.print("Is aware entr: ");
+      Serial.println(String(isAwareEntr));
       break;
 
     case IS_AWARE_MASS:
