@@ -53,6 +53,7 @@ NexTouch *nex_listen_list[] =
   &btnPlusMaxMassNex,
   &btnMinusMinMassNex,
   &btnPlusMinMassNex,
+  &btnPLNex,
   &btnMuteEntrHI,
   &btnMuteEntrLO,
   &btnMuteMassHI,
@@ -70,6 +71,8 @@ void btnMinusMaxMassCB(void *ptr);
 void btnPlusMaxMassCB(void *ptr);
 void btnMinusMinMassCB(void *ptr);
 void btnPlusMinMassCB(void *ptr);
+
+void btnPLCB(void *ptr);
 
 void btnMuteEntrHICB(void *ptr);
 void btnMuteEntrLOCB(void *ptr);
@@ -105,10 +108,12 @@ void lcd_setup(void) {
   btnMinusMinMassNex.attachPop(btnMinusMinMassCB);
   btnPlusMinMassNex.attachPop(btnPlusMinMassCB);
 
-  btnMuteEntrHI.attachPop(btnMuteEntrHICB, &btnMuteEntrHI);
-  btnMuteEntrLO.attachPop(btnMuteEntrLOCB, &btnMuteEntrLO);
-  btnMuteMassHI.attachPop(btnMuteMassHICB, &btnMuteMassHI);
-  btnMuteMassLO.attachPop(btnMuteMassLOCB, &btnMuteMassLO);
+  btnPLNex.attachPush(btnPLCB);
+
+  btnMuteEntrHI.attachPush(btnMuteEntrHICB, &btnMuteEntrHI);
+  btnMuteEntrLO.attachPush(btnMuteEntrLOCB, &btnMuteEntrLO);
+  btnMuteMassHI.attachPush(btnMuteMassHICB, &btnMuteMassHI);
+  btnMuteMassLO.attachPush(btnMuteMassLOCB, &btnMuteMassLO);
 
   page_change_to(PAGE_MAIN);
 
@@ -126,43 +131,25 @@ void lcd_setup(void) {
   btnPLNex.setValue(state_manager_get(PALHA_LENHA));
 }
 
-/*
- * Esta função existe para garantir que o teste: state_manager_get(TEMP_MASS) <= a - b
- * Quando a < b, a subtração dos dois irá fazer o resultado causar um WRAP e bugar o resultado
- */
-uint32_t safe_subtraction(uint32_t a, uint32_t b) {
-  uint32_t diff;
-  if (a < b){
-    diff = 0;
-  } else {
-    diff = a - b;
-  }
-  
-  return diff;
-}
+
 
 void lcd_loop(void) {
   nexLoop(nex_listen_list);
 
   if (state_manager_get(TEMP_ENTR) >= (state_manager_get(MAX_ENTR) + HIST_ENTR) && !state_manager_get(IS_AWARE_ENTR)) {
-    Serial.println("Changing to ENTRHI");
-    
+    //    Serial.println("Changing to ENTRHI");
     page_change_to(PAGE_ENTR_HI);
   } else if (state_manager_get(TEMP_ENTR) <= safe_subtraction(state_manager_get(MIN_ENTR), HIST_ENTR) && !state_manager_get(IS_AWARE_ENTR)) {
-    Serial.println("Changing to ENTRLO");
-    
+    //    Serial.println("Changing to ENTRLO");
     page_change_to(PAGE_ENTR_LO);
   } else if (state_manager_get(TEMP_MASS) >= (state_manager_get(MAX_MASS) + HIST_MASS) && !state_manager_get(IS_AWARE_MASS)) {
-    Serial.println("Changing to MASSHI");
-    
+    //    Serial.println("Changing to MASSHI");
     page_change_to(PAGE_MASS_HI);
-  } else if (state_manager_get(TEMP_MASS) <= safe_subtraction(state_manager_get(MIN_MASS),HIST_MASS) && !state_manager_get(IS_AWARE_MASS)) {
-    Serial.println("Changing to MASSLO");
-    
+  } else if (state_manager_get(TEMP_MASS) <= safe_subtraction(state_manager_get(MIN_MASS), HIST_MASS) && !state_manager_get(IS_AWARE_MASS)) {
+    //    Serial.println("Changing to MASSLO");
     page_change_to(PAGE_MASS_LO);
   } else {
-    Serial.println("Changing to MAIN");
-    
+    //    Serial.println("Changing to MAIN");
     page_change_to(PAGE_MAIN);
   }
 }
@@ -204,6 +191,23 @@ void page_change_to(lcd_page_t page) {
         break;
     }
     curr_page = page;
+  }
+}
+
+void lcd_trigger_update() {
+  if (curr_page == PAGE_MAIN) {
+    itoa(state_manager_get(TEMP_ENTR), entrTempStr, 10);
+    entrTempNex.setText(entrTempStr);
+
+    itoa(state_manager_get(TEMP_MASS), massTempStr, 10);
+    massTempNex.setText(massTempStr);
+
+    maxEntrTempNex.setValue(state_manager_get(MAX_ENTR));
+    minEntrTempNex.setValue(state_manager_get(MIN_ENTR));
+    maxMassTempNex.setValue(state_manager_get(MAX_MASS));
+    minMassTempNex.setValue(state_manager_get(MIN_MASS));
+
+    btnPLNex.setValue(state_manager_get(PALHA_LENHA));
   }
 }
 
@@ -261,6 +265,13 @@ void btnPlusMinMassCB(void *ptr) {
   minMassTempNex.getValue(&value);
 
   state_manager_set(MIN_MASS, value);
+}
+
+void btnPLCB(void *ptr) {
+  uint32_t dual_state;
+  btnPLNex.getValue(&dual_state);
+
+  state_manager_set(PALHA_LENHA, dual_state);
 }
 
 void btnMuteEntrHICB(void *ptr) {

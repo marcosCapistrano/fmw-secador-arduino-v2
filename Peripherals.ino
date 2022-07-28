@@ -1,9 +1,9 @@
 #define OUT_QUEIMADOR       12
 #define OUT_BUZINA          13
-#define LED_MASSA_QUENTE     5
-#define LED_MASSA_FRIO       4
-#define LED_ENTRADA_QUENTE   0
-#define LED_ENTRADA_FRIO     2
+#define LED_MASSA_QUENTE     4
+#define LED_MASSA_FRIO       5
+#define LED_ENTRADA_QUENTE   2
+#define LED_ENTRADA_FRIO     0
 #define LED_CONEXAO         18
 #define SENSORT             15
 
@@ -11,6 +11,17 @@ OneWire oneWire(SENSORT);
 DallasTemperature sensors(&oneWire);
 
 bool ledConexaoIsOn = false;
+bool ledEntrQuenteIsOn = false;
+bool ledEntrFrioIsOn = false;
+bool ledMassQuenteIsOn = false;
+bool ledMassFrioIsOn = false;
+bool queimadorIsOn = false;
+
+bool alarmeIsOn = false;
+bool alarmeEntr = false;
+bool alarmeMass = false;
+
+uint32_t lastReadTempSensor;
 
 void peripherals_setup(void) {
   pinMode(OUT_QUEIMADOR, OUTPUT);
@@ -28,24 +39,187 @@ void peripherals_setup(void) {
   digitalWrite(LED_MASSA_FRIO, HIGH);
   digitalWrite(LED_ENTRADA_QUENTE, HIGH);
   digitalWrite(LED_ENTRADA_FRIO, HIGH);
+  digitalWrite(LED_CONEXAO, LOW);
 
   sensors.begin();
+  lastReadTempSensor = millis() / 1000;
 }
+
+uint32_t entrTempPerif;
+uint32_t massTempPerif;
+
+uint32_t maxEntrTempPerif;
+uint32_t minEntrTempPerif;
+uint32_t maxMassTempPerif;
+uint32_t minMassTempPerif;
+
+uint32_t palhaLenhaPerif;
+
+uint32_t isAwareEntrPerif;
+uint32_t isAwareMassPerif;
 
 float sensor_temp;
 void peripherals_loop(void) {
-  sensors.requestTemperatures();
-  sensor_temp = sensors.getTempCByIndex(0);
-  if (sensor_temp < 0) sensor_temp = 0;
-  state_manager_set(TEMP_ENTR, (uint32_t) sensor_temp);
+  if (safe_subtraction(millis() / 1000, lastReadTempSensor) > 5) {
+    sensors.requestTemperatures();
+    sensor_temp = sensors.getTempCByIndex(0);
+    lastReadTempSensor = millis() / 1000;
 
-  if (millis() / 1000 - state_manager_get(LAST_COMM) > 10) {
+    if (sensor_temp < 0) sensor_temp = 0;
+    state_manager_set(TEMP_ENTR, (uint32_t) sensor_temp);
+  }
+
+  if (safe_subtraction(millis() / 1000, state_manager_get(LAST_COMM)) > 15) {
     if (ledConexaoIsOn) {
       digitalWrite(LED_CONEXAO, LOW);
+      ledConexaoIsOn = false;
     }
   } else {
-    if (!ledConexaoIsOn) {
+    if (!ledConexaoIsOn && state_manager_get(HAS_COMM_ONCE) == 1) {
       digitalWrite(LED_CONEXAO, HIGH);
+      ledConexaoIsOn = true;
+    }
+  }
+
+  entrTempPerif = state_manager_get(TEMP_ENTR);
+  massTempPerif = state_manager_get(TEMP_MASS);
+
+  maxEntrTempPerif = state_manager_get(MAX_ENTR);
+  minEntrTempPerif = state_manager_get(MIN_ENTR);
+  maxMassTempPerif = state_manager_get(MAX_MASS);
+  minMassTempPerif = state_manager_get(MIN_MASS);
+
+  palhaLenhaPerif = state_manager_get(PALHA_LENHA);
+  isAwareEntrPerif = state_manager_get(IS_AWARE_ENTR);
+  isAwareMassPerif = state_manager_get(IS_AWARE_MASS);
+
+  if (entrTempPerif >= maxEntrTempPerif + HIST_ENTR  || (entrTempPerif != 0 && entrTempPerif <= safe_subtraction(minEntrTempPerif, HIST_ENTR))) {
+    if (!isAwareEntrPerif) {
+      alarmeEntr = true;
+
+      if (!alarmeIsOn) {
+        digitalWrite(OUT_BUZINA, LOW);
+        alarmeIsOn = true;
+      }
+    } else {
+      alarmeEntr = false;
+      if (alarmeIsOn && !alarmeMass) {
+        digitalWrite(OUT_BUZINA, HIGH);
+        alarmeIsOn = false;
+      }
+    }
+  } else {
+    alarmeEntr = false;
+    if (alarmeIsOn && !alarmeMass) {
+      digitalWrite(OUT_BUZINA, HIGH);
+      alarmeIsOn = false;
+    }
+  }
+  
+  if (massTempPerif >= maxMassTempPerif + HIST_MASS || (massTempPerif != 0 && massTempPerif <= safe_subtraction(minMassTempPerif, HIST_MASS))) {
+    if (!isAwareMassPerif) {
+      alarmeMass = true;
+
+      if (!alarmeIsOn) {
+        digitalWrite(OUT_BUZINA, LOW);
+        alarmeIsOn = true;
+      }
+    } else {
+      alarmeMass = false;
+      if (alarmeIsOn && !alarmeEntr) {
+        digitalWrite(OUT_BUZINA, HIGH);
+        alarmeIsOn = false;
+      }
+    }
+  } else {
+    alarmeMass = false;
+    if (alarmeIsOn && !alarmeEntr) {
+      digitalWrite(OUT_BUZINA, HIGH);
+      alarmeIsOn = false;
+    }
+  }
+
+  if (entrTempPerif > maxEntrTempPerif) {
+    if (!ledEntrQuenteIsOn) {
+      digitalWrite(LED_ENTRADA_QUENTE, LOW);
+      ledEntrQuenteIsOn = true;
+    }
+
+    if (palhaLenhaPerif == 0 && queimadorIsOn) { //Se tiver setado em palha, desligar o queimador
+      digitalWrite(OUT_QUEIMADOR, HIGH);
+      queimadorIsOn = false;
+    }
+  } else if (minEntrTempPerif <= entrTempPerif && entrTempPerif <= maxEntrTempPerif) {
+    if (ledEntrQuenteIsOn) {
+      digitalWrite(LED_ENTRADA_QUENTE, HIGH);
+      ledEntrQuenteIsOn = false;
+    }
+
+    if (ledEntrFrioIsOn) {
+      digitalWrite(LED_ENTRADA_FRIO, HIGH);
+      ledEntrFrioIsOn = false;
+    }
+
+    if (palhaLenhaPerif == 0 && !queimadorIsOn) { //Se tiver setado em palha, desligar o queimador
+      digitalWrite(OUT_QUEIMADOR, LOW);
+      queimadorIsOn = true;
+    }
+
+    if (isAwareEntrPerif) {
+      state_manager_set(IS_AWARE_ENTR, 0);
+      isAwareEntrPerif = 0;
+    }
+  } else {
+    if (!ledEntrFrioIsOn) {
+      digitalWrite(LED_ENTRADA_FRIO, LOW);
+      ledEntrFrioIsOn = true;
+    }
+
+    if (palhaLenhaPerif == 0 && !queimadorIsOn) { //Se tiver setado em palha, desligar o queimador
+      digitalWrite(OUT_QUEIMADOR, LOW);
+      queimadorIsOn = true;
+    }
+  }
+
+  if (massTempPerif > maxMassTempPerif) {
+    if (!ledMassQuenteIsOn) {
+      digitalWrite(LED_MASSA_QUENTE, LOW);
+      ledMassQuenteIsOn = true;
+    }
+
+    if (palhaLenhaPerif == 0 && queimadorIsOn) { //Se tiver setado em palha, desligar o queimador
+      digitalWrite(OUT_QUEIMADOR, HIGH);
+      queimadorIsOn = false;
+    }
+  } else if (minMassTempPerif <= massTempPerif && massTempPerif <= maxMassTempPerif) {
+    if (ledMassQuenteIsOn) {
+      digitalWrite(LED_MASSA_QUENTE, HIGH);
+      ledMassQuenteIsOn = false;
+    }
+
+    if (ledMassFrioIsOn) {
+      digitalWrite(LED_MASSA_FRIO, HIGH);
+      ledMassFrioIsOn = false;
+    }
+
+    if (palhaLenhaPerif == 0 && !queimadorIsOn) { //Se tiver setado em palha, desligar o queimador
+      digitalWrite(OUT_QUEIMADOR, LOW);
+      queimadorIsOn = true;
+    }
+
+    if (isAwareMassPerif) {
+      state_manager_set(IS_AWARE_MASS, 0);
+      isAwareMassPerif = 0;
+    }
+  } else {
+    if (!ledMassFrioIsOn) {
+      digitalWrite(LED_MASSA_FRIO, LOW);
+      ledMassFrioIsOn = true;
+    }
+
+    if (palhaLenhaPerif == 0 && !queimadorIsOn) { //Se tiver setado em palha, desligar o queimador
+      digitalWrite(OUT_QUEIMADOR, LOW);
+      queimadorIsOn = true;
     }
   }
 }

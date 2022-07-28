@@ -11,11 +11,12 @@ uint32_t tempEntr = 0;
 uint32_t tempMass = 0;
 
 uint32_t maxEntr = 100;
-uint32_t minEntr = 0;
+uint32_t minEntr = 1;
 uint32_t maxMass = 100;
-uint32_t minMass = 0;
+uint32_t minMass = 1;
 uint32_t palhaLenha = 0;
 uint32_t lastComm = 0;
+uint32_t hasCommOnce = 0;
 
 uint32_t isAwareEntr = 0;
 uint32_t isAwareMass = 0;
@@ -62,6 +63,10 @@ uint32_t state_manager_get(state_prefs_t choice) {
     case PALHA_LENHA:
       return palhaLenha;
       break;
+
+      case HAS_COMM_ONCE:
+        return hasCommOnce;
+        break;
 
     case LAST_COMM:
       return lastComm;
@@ -128,6 +133,10 @@ void state_manager_set(state_prefs_t choice, uint32_t value) {
     case LAST_COMM:
       lastComm = value;
       break;
+
+      case HAS_COMM_ONCE:
+        hasCommOnce = value;
+        break;
 
     case IS_AWARE_ENTR:
       isAwareEntr = value;
