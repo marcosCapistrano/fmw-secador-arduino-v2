@@ -28,11 +28,10 @@ typedef enum {
 
 void setup()
 {
+  Serial.begin(115200);
   state_manager_setup();
-  
-  lcd_setup();
-//  server_setup();
   peripherals_setup();
+  lcd_setup();
 
   /*
    * O WebServer PRECISA rodar em um core separado, pois se suas respostas demorarem, a conexao é imediatamente quebrada
@@ -40,7 +39,7 @@ void setup()
   xTaskCreatePinnedToCore(
       server_task, /* Function to implement the task */
       "Task1", /* Name of the task */
-      2048,  /* Stack size in words */
+      10000,  /* Stack size in words */
       NULL,  /* Task input parameter */
       5,  /* Priority of the task */
       NULL,  /* Task handle. */

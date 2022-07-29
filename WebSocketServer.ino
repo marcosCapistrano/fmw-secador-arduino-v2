@@ -1,4 +1,4 @@
-const char *ssid = "CT_101";
+const char *ssid = "CT_22";
 const char *password = "AusyxSolucoes";
 
 WebSocketsServer webSocket = WebSocketsServer(80);
@@ -57,8 +57,6 @@ void handle_events(uint8_t num, WStype_t type, uint8_t * payload, size_t length)
       break;
     case WStype_TEXT:
       if (length > 0) {
-        Serial.print("Received: ");
-        Serial.println((const char *) payload);
         float temperatura = atoi((const char *) payload);
         if(temperatura < 0) temperatura = 0;
         
@@ -69,16 +67,7 @@ void handle_events(uint8_t num, WStype_t type, uint8_t * payload, size_t length)
         lcd_trigger_update();
       }
       break;
-    case WStype_BIN:
-      Serial.printf("[%u] get binary length: %u\n", num, length);
-      // send message to client
-      // webSocket.sendBIN(num, payload, length);
-      break;
-    case WStype_ERROR:
-    case WStype_FRAGMENT_TEXT_START:
-    case WStype_FRAGMENT_BIN_START:
-    case WStype_FRAGMENT:
-    case WStype_FRAGMENT_FIN:
+    default:
       break;
   }
 
