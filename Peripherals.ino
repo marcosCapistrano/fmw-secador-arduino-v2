@@ -33,8 +33,8 @@ void peripherals_setup(void) {
   pinMode(LED_ENTRADA_FRIO, OUTPUT);
   pinMode(LED_CONEXAO, OUTPUT);
 
-  digitalWrite(OUT_QUEIMADOR, HIGH);
-  digitalWrite(OUT_BUZINA, HIGH);
+  digitalWrite(OUT_QUEIMADOR, LOW);
+  digitalWrite(OUT_BUZINA, LOW);
 
   digitalWrite(LED_MASSA_QUENTE, HIGH);
   digitalWrite(LED_MASSA_FRIO, HIGH);
@@ -69,7 +69,7 @@ void peripherals_loop(void) {
     if (sensor_temp < 0) sensor_temp = 0;
     state_manager_set(TEMP_ENTR, (uint32_t) sensor_temp);
 
-    lcd_trigger_update();
+    lcd_trigger_update(TEMP_ENTR);
   }
 
   if (safe_subtraction(millis() / 1000, state_manager_get(LAST_COMM)) > 15) {
@@ -110,14 +110,14 @@ void handleAlarme() {
 
       if (!alarmeIsOn) {
         Serial.println("Turning ON Alarme");
-        digitalWrite(OUT_BUZINA, LOW);
+        digitalWrite(OUT_BUZINA, HIGH);
         alarmeIsOn = true;
       }
     } else {
       alarmeEntr = false;
       if (alarmeIsOn && !alarmeMass) {
         Serial.println("Turning OFF Alarme");
-        digitalWrite(OUT_BUZINA, HIGH);
+        digitalWrite(OUT_BUZINA, LOW);
         alarmeIsOn = false;
       }
     }
@@ -125,7 +125,7 @@ void handleAlarme() {
     alarmeEntr = false;
     if (alarmeIsOn && !alarmeMass) {
       Serial.println("Turning OFF Alarme");
-      digitalWrite(OUT_BUZINA, HIGH);
+      digitalWrite(OUT_BUZINA, LOW);
       alarmeIsOn = false;
     }
   }
@@ -136,14 +136,14 @@ void handleAlarme() {
 
       if (!alarmeIsOn) {
         Serial.println("Turning ON Alarme");
-        digitalWrite(OUT_BUZINA, LOW);
+        digitalWrite(OUT_BUZINA, HIGH);
         alarmeIsOn = true;
       }
     } else {
       alarmeMass = false;
       if (alarmeIsOn && !alarmeEntr) {
         Serial.println("Turning OFF Alarme");
-        digitalWrite(OUT_BUZINA, HIGH);
+        digitalWrite(OUT_BUZINA, LOW);
         alarmeIsOn = false;
       }
     }
@@ -151,7 +151,7 @@ void handleAlarme() {
     alarmeMass = false;
     if (alarmeIsOn && !alarmeEntr) {
       Serial.println("Turning OFF Alarme");
-      digitalWrite(OUT_BUZINA, HIGH);
+      digitalWrite(OUT_BUZINA, LOW);
       alarmeIsOn = false;
     }
   }
@@ -213,18 +213,23 @@ void handleLEDsAndIsAware() {
   }
 }
 
-void handleQueimador() {  
+void handleQueimador() {
   if (palhaLenhaPerif == 0) {
     if (entrTempPerif < maxEntrTempPerif && massTempPerif < maxMassTempPerif) {
       if (!queimadorIsOn) {
-        digitalWrite(OUT_QUEIMADOR, LOW);
+        digitalWrite(OUT_QUEIMADOR, HIGH);
         queimadorIsOn = true;
       }
     } else {
       if (queimadorIsOn) {
-        digitalWrite(OUT_QUEIMADOR, HIGH);
+        digitalWrite(OUT_QUEIMADOR, LOW);
         queimadorIsOn = false;
       }
+    }
+  } else {
+    if (queimadorIsOn) {
+      digitalWrite(OUT_QUEIMADOR, LOW);
+      queimadorIsOn = false;
     }
   }
 }

@@ -9,8 +9,8 @@
 #include <Preferences.h>
 #include <Nextion.h>
 
-#define HIST_ENTR 1
-#define HIST_MASS 1
+#define HIST_ENTR 7
+#define HIST_MASS 7
 
 typedef enum {
   TEMP_ENTR,

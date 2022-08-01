@@ -30,6 +30,7 @@ void state_manager_setup() {
   minEntr = preferences.getUInt(minEntrKey, 0);
   maxMass = preferences.getUInt(maxMassKey, 100);
   minMass = preferences.getUInt(minMassKey, 0);
+  palhaLenha = preferences.getUInt(palhaLenhaKey, 0);
 
   Serial.println("STATE OK!");
 }

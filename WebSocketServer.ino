@@ -1,4 +1,4 @@
-const char *ssid = "CT_22";
+const char *ssid = "CT_24";
 const char *password = "AusyxSolucoes";
 
 WebSocketsServer webSocket = WebSocketsServer(80);
@@ -45,7 +45,7 @@ void server_loop() {
 }
 
 void handle_events(uint8_t num, WStype_t type, uint8_t * payload, size_t length) {
-  switch (type) {
+  switch (type) { 
     case WStype_DISCONNECTED:
       Serial.printf("[%u] Disconnected!\n", num);
       break;
@@ -64,7 +64,7 @@ void handle_events(uint8_t num, WStype_t type, uint8_t * payload, size_t length)
         state_manager_set(LAST_COMM, millis()/1000);
         state_manager_set(HAS_COMM_ONCE, 1);
 
-        lcd_trigger_update();
+        lcd_trigger_update(TEMP_MASS);
       }
       break;
     default:

@@ -76,7 +76,8 @@ void btnPlusMaxMassCB(void *ptr);
 void btnMinusMinMassCB(void *ptr);
 void btnPlusMinMassCB(void *ptr);
 
-void btnPLCB(void *ptr);
+void btnPLPushCB(void *ptr);
+void btnPLPopCB(void *ptr);
 
 void btnMuteEntrHICB(void *ptr);
 void btnMuteEntrLOCB(void *ptr);
@@ -127,7 +128,8 @@ void lcd_setup(void) {
   btnPlusMinMassNex.attachPush(btnPlusMinMassPushCB);
   btnPlusMinMassNex.attachPop(btnPlusMinMassPopCB);
 
-  btnPLNex.attachPush(btnPLCB);
+  btnPLNex.attachPush(btnPLPushCB);
+  btnPLNex.attachPop(btnPLPopCB);
 
   btnMuteEntrHI.attachPush(btnMuteEntrHICB, &btnMuteEntrHI);
   btnMuteEntrLO.attachPush(btnMuteEntrLOCB, &btnMuteEntrLO);
@@ -159,6 +161,37 @@ void lcd_loop(void) {
     //    Serial.println("Changing to MAIN");
     page_change_to(PAGE_MAIN);
   }
+
+  /* Aqui acontece uma checagem para garantir que o que está sendo mostrado no display, é o que o ESP acha que está rolando */
+  if (curr_page == PAGE_MAIN) {
+    uint32_t maxEntrTemp, minEntrTemp, maxMassTemp, minMassTemp, palhaLenha;
+    
+    maxEntrTempNex.getValue(&maxEntrTemp);
+    minEntrTempNex.getValue(&minEntrTemp);
+    maxMassTempNex.getValue(&maxMassTemp);
+    minMassTempNex.getValue(&minMassTemp);
+    btnPLNex.getValue(&palhaLenha);
+
+    uint32_t maxEntrTempState, minEntrTempState, maxMassTempState, minMassTempState, palhaLenhaState;
+
+    maxEntrTempState = state_manager_get(MAX_ENTR);
+    minEntrTempState = state_manager_get(MIN_ENTR);
+    maxMassTempState = state_manager_get(MAX_MASS);
+    minMassTempState = state_manager_get(MIN_MASS);
+    palhaLenhaState = state_manager_get(PALHA_LENHA);
+
+    if(maxEntrTemp != maxEntrTempState) {
+      state_manager_set(MAX_ENTR, maxEntrTemp);
+    } else if(minEntrTemp != minEntrTempState) {
+      state_manager_set(MIN_ENTR, minEntrTemp);
+    } else if(maxMassTemp != maxMassTempState) {
+      state_manager_set(MAX_MASS, maxMassTemp);
+    } else if(minMassTemp != minMassTempState) {
+      state_manager_set(MIN_MASS, minMassTemp);
+    } else if(palhaLenha != palhaLenhaState) {
+      state_manager_set(PALHA_LENHA, palhaLenha);
+    }
+  }
 }
 
 void page_change_to(lcd_page_t page) {
@@ -166,7 +199,7 @@ void page_change_to(lcd_page_t page) {
     switch (page) {
       case PAGE_MAIN:
         pageMain.show();
-        pageMain.show();
+
         itoa(state_manager_get(TEMP_ENTR), entrTempStr, 10);
         entrTempNex.setText(entrTempStr);
 
@@ -202,32 +235,27 @@ void page_change_to(lcd_page_t page) {
   }
 }
 
-void lcd_trigger_update() {
-  if (!blockUpdate) {
-    if (curr_page == PAGE_MAIN) {
+void lcd_trigger_update(state_prefs_t op) {
+  //  if (!blockUpdate) {
+  if (curr_page == PAGE_MAIN) {
+    if (op == TEMP_ENTR) {
       itoa(state_manager_get(TEMP_ENTR), entrTempStr, 10);
       entrTempNex.setText(entrTempStr);
-
+    } else if (op == TEMP_MASS) {
       itoa(state_manager_get(TEMP_MASS), massTempStr, 10);
       massTempNex.setText(massTempStr);
-
-      maxEntrTempNex.setValue(state_manager_get(MAX_ENTR));
-      minEntrTempNex.setValue(state_manager_get(MIN_ENTR));
-      maxMassTempNex.setValue(state_manager_get(MAX_MASS));
-      minMassTempNex.setValue(state_manager_get(MIN_MASS));
-
-      btnPLNex.setValue(state_manager_get(PALHA_LENHA));
     }
   }
+  //  }
 }
 
 void btnMinusMaxEntrPushCB(void *ptr) {
-  Serial.println("PUSH");
+  //  Serial.println("PUSH");
   blockUpdate = true;
 }
 
 void btnMinusMaxEntrPopCB(void *ptr) {
-  Serial.println("PUSH");
+  //  Serial.println("PUSH");
   uint32_t value;
   maxEntrTempNex.getValue(&value);
 
@@ -236,12 +264,12 @@ void btnMinusMaxEntrPopCB(void *ptr) {
 }
 
 void btnPlusMaxEntrPushCB(void *ptr) {
-  Serial.println("PUSH");
+  //  Serial.println("PUSH");
   blockUpdate = true;
 }
 
 void btnPlusMaxEntrPopCB(void *ptr) {
-  Serial.println("POP");
+  //  Serial.println("POP");
   uint32_t value;
   maxEntrTempNex.getValue(&value);
 
@@ -250,12 +278,12 @@ void btnPlusMaxEntrPopCB(void *ptr) {
 }
 
 void btnMinusMinEntrPushCB(void *ptr) {
-  Serial.println("PUSH");
+  //  Serial.println("PUSH");
   blockUpdate = true;
 }
 
 void btnMinusMinEntrPopCB(void *ptr) {
-  Serial.println("POP");
+  //  Serial.println("POP");
   uint32_t value;
   minEntrTempNex.getValue(&value);
 
@@ -264,12 +292,12 @@ void btnMinusMinEntrPopCB(void *ptr) {
 }
 
 void btnPlusMinEntrPushCB(void *ptr) {
-  Serial.println("PUSH");
+  //  Serial.println("PUSH");
   blockUpdate = true;
 }
 
 void btnPlusMinEntrPopCB(void *ptr) {
-  Serial.println("POP");
+  //  Serial.println("POP");
   uint32_t value;
   minEntrTempNex.getValue(&value);
 
@@ -278,12 +306,12 @@ void btnPlusMinEntrPopCB(void *ptr) {
 }
 
 void btnMinusMaxMassPushCB(void *ptr) {
-  Serial.println("PUSH");
+  //  Serial.println("PUSH");
   blockUpdate = true;
 }
 
 void btnMinusMaxMassPopCB(void *ptr) {
-  Serial.println("POP");
+  //  Serial.println("POP");
   uint32_t value;
   maxMassTempNex.getValue(&value);
 
@@ -292,12 +320,12 @@ void btnMinusMaxMassPopCB(void *ptr) {
 }
 
 void btnPlusMaxMassPushCB(void *ptr) {
-  Serial.println("PUSH");
+  //  Serial.println("PUSH");
   blockUpdate = true;
 }
 
 void btnPlusMaxMassPopCB(void *ptr) {
-  Serial.println("POP");
+  //  Serial.println("POP");
   uint32_t value;
   maxMassTempNex.getValue(&value);
 
@@ -306,12 +334,12 @@ void btnPlusMaxMassPopCB(void *ptr) {
 }
 
 void btnMinusMinMassPushCB(void *ptr) {
-  Serial.println("PUSH");
+  //  Serial.println("PUSH");
   blockUpdate = true;
 }
 
 void btnMinusMinMassPopCB(void *ptr) {
-  Serial.println("POP");
+  //  Serial.println("POP");
   uint32_t value;
   minMassTempNex.getValue(&value);
 
@@ -320,12 +348,12 @@ void btnMinusMinMassPopCB(void *ptr) {
 }
 
 void btnPlusMinMassPushCB(void *ptr) {
-  Serial.println("PUSH");
+  //  Serial.println("PUSH");
   blockUpdate = true;
 }
 
 void btnPlusMinMassPopCB(void *ptr) {
-  Serial.println("POP");
+  //  Serial.println("POP");
   uint32_t value;
   minMassTempNex.getValue(&value);
 
@@ -333,7 +361,14 @@ void btnPlusMinMassPopCB(void *ptr) {
   blockUpdate = false;
 }
 
-void btnPLCB(void *ptr) {
+void btnPLPushCB(void *ptr) {
+  uint32_t dual_state;
+  btnPLNex.getValue(&dual_state);
+
+  state_manager_set(PALHA_LENHA, dual_state);
+}
+
+void btnPLPopCB(void *ptr) {
   uint32_t dual_state;
   btnPLNex.getValue(&dual_state);
 
