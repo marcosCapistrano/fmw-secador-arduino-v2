@@ -84,6 +84,7 @@ void btnMuteEntrLOCB(void *ptr);
 void btnMuteMassHICB(void *ptr);
 void btnMuteMassLOCB(void *ptr);
 
+void checkFlicker(state_prefs_t op);
 /*
    ------------------------------------------------------------------------------------------------------------------------
 */
@@ -140,8 +141,6 @@ void lcd_setup(void) {
   page_change_to(PAGE_MAIN);
 }
 
-
-int flickerCounter = 0;
 void lcd_loop(void) {
   nexLoop(nex_listen_list);
 
@@ -163,20 +162,52 @@ void lcd_loop(void) {
   }
 
   if (curr_page == PAGE_MAIN) {
-    uint32_t palhaLenhaState = state_manager_get(PALHA_LENHA);
-    uint32_t palhaLenhaLCD;
+    checkFlicker(MAX_ENTR);
+    checkFlicker(MIN_ENTR);
+    checkFlicker(MAX_MASS);
+    checkFlicker(MIN_MASS);
+    checkFlicker(PALHA_LENHA);
+  }
+}
 
-    btnPLNex.getValue(&palhaLenhaLCD);
+int flickerCounter = 0;
+void checkFlicker(state_prefs_t op) {
+  uint32_t stateValue = state_manager_get(op);
+  uint32_t lcdValue;
 
-    if (palhaLenhaLCD != palhaLenhaState) {
-      if (palhaLenhaLCD == 0 || palhaLenhaLCD == 1) {
-        flickerCounter++;
+  switch (op) {
+    case PALHA_LENHA:
+      btnPLNex.getValue(&lcdValue);
+      break;
 
-        if(flickerCounter > 5) {
-          state_manager_set(PALHA_LENHA, palhaLenhaLCD); 
-          flickerCounter = 0;
-        }
-      }
+    case MAX_ENTR:
+      maxEntrTempNex.getValue(&lcdValue);
+      break;
+
+    case MIN_ENTR:
+      minEntrTempNex.getValue(&lcdValue);
+      break;
+
+    case MAX_MASS:
+      maxMassTempNex.getValue(&lcdValue);
+      break;
+
+    case MIN_MASS:
+      minMassTempNex.getValue(&lcdValue);
+      break;
+
+    default:
+      break;
+  }
+
+
+
+  if (lcdValue != stateValue) {
+    flickerCounter++;
+
+    if (flickerCounter > 7) {
+      flickerCounter = 0;
+      state_manager_set(op, lcdValue);
     }
   }
 }
@@ -349,12 +380,26 @@ void btnPlusMinMassPopCB(void *ptr) {
 }
 
 void btnPLPushCB(void *ptr) {
-  //    Serial.println("PUSH");
+  Serial.println("PUSH");
+  uint32_t value;
+  btnPLNex.getValue(&value);
+
+  if (value == 0 || value == 1) {
+    state_manager_set(PALHA_LENHA, value);
+  }
+  Serial.println(value);
   blockUpdate = true;
 }
 
 void btnPLPopCB(void *ptr) {
-  //    Serial.println("POP");
+  uint32_t value;
+  btnPLNex.getValue(&value);
+
+  if (value == 0 || value == 1) {
+    state_manager_set(PALHA_LENHA, value);
+  }
+  Serial.print("POP ");
+  Serial.println(value);
   //  if(state_manager_get(PALHA_LENHA) == 0) {
   //    state_manager_set(PALHA_LENHA, 1);
   //  } else {

@@ -110,14 +110,14 @@ void handleAlarme() {
       alarmeEntr = true;
 
       if (!alarmeIsOn) {
-        Serial.println("Turning ON Alarme");
+//        Serial.println("Turning ON Alarme");
         digitalWrite(OUT_BUZINA, HIGH);
         alarmeIsOn = true;
       }
     } else {
       alarmeEntr = false;
       if (alarmeIsOn && !alarmeMass) {
-        Serial.println("Turning OFF Alarme");
+//        Serial.println("Turning OFF Alarme");
         digitalWrite(OUT_BUZINA, LOW);
         alarmeIsOn = false;
       }
@@ -125,7 +125,7 @@ void handleAlarme() {
   } else {
     alarmeEntr = false;
     if (alarmeIsOn && !alarmeMass) {
-      Serial.println("Turning OFF Alarme");
+//      Serial.println("Turning OFF Alarme");
       digitalWrite(OUT_BUZINA, LOW);
       alarmeIsOn = false;
     }
@@ -136,14 +136,14 @@ void handleAlarme() {
       alarmeMass = true;
 
       if (!alarmeIsOn) {
-        Serial.println("Turning ON Alarme");
+//        Serial.println("Turning ON Alarme");
         digitalWrite(OUT_BUZINA, HIGH);
         alarmeIsOn = true;
       }
     } else {
       alarmeMass = false;
       if (alarmeIsOn && !alarmeEntr) {
-        Serial.println("Turning OFF Alarme");
+//        Serial.println("Turning OFF Alarme");
         digitalWrite(OUT_BUZINA, LOW);
         alarmeIsOn = false;
       }
@@ -151,7 +151,7 @@ void handleAlarme() {
   } else {
     alarmeMass = false;
     if (alarmeIsOn && !alarmeEntr) {
-      Serial.println("Turning OFF Alarme");
+//      Serial.println("Turning OFF Alarme");
       digitalWrite(OUT_BUZINA, LOW);
       alarmeIsOn = false;
     }
