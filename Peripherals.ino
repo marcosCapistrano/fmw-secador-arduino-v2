@@ -230,7 +230,8 @@ void handleQueimador() {
 //  Serial.print(queimadorIsOn);
 //
 //  Serial.println("");
-  
+
+//  Serial.println(palhaLenhaPerif);
   if (palhaLenhaPerif == 0) {
     if (entrTempPerif < maxEntrTempPerif && massTempPerif < maxMassTempPerif) {
       if (!queimadorIsOn) {
