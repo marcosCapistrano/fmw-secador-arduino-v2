@@ -8,7 +8,7 @@ NexPage pageEntrHI = NexPage(4, 0, "page4");                 //--> Tela entrada 
 NexPage pageEntrLO = NexPage(5, 0, "page5");                 //--> Tela entrada abaixo
 NexPage pageMassLO = NexPage(3, 0, "page3");                 //--> Tela massa abaixo
 
-NexDSButton btnPLNex = NexDSButton(1, 1, "bt0");                                //--> Palha/lenha
+NexButton btnPLNex = NexButton(1, 23, "b0");                                //--> Palha/lenha
 
 NexButton btnMuteEntrHI = NexButton(4, 1, "b0");
 NexButton btnMuteEntrLO = NexButton(5, 1, "b0");
@@ -129,8 +129,8 @@ void lcd_setup(void) {
   //  btnPlusMinMassNex.attachPush(btnPlusMinMassPushCB, &btnPlusMinMassNex);
   //  btnPlusMinMassNex.attachPop(btnPlusMinMassPopCB, &btnPlusMinMassNex);
   //
-  //  btnPLNex.attachPush(btnPLPushCB, &btnPLNex);
-  //  btnPLNex.attachPop(btnPLPopCB, &btnPLNex);
+  btnPLNex.attachPush(btnPLPushCB, &btnPLNex);
+  //    btnPLNex.attachPop(btnPLPopCB, &btnPLNex);
 
   btnMuteEntrHI.attachPush(btnMuteEntrHICB, &btnMuteEntrHI);
   btnMuteEntrLO.attachPush(btnMuteEntrLOCB, &btnMuteEntrLO);
@@ -141,6 +141,7 @@ void lcd_setup(void) {
   page_change_to(PAGE_MAIN);
 }
 
+int flickerCounter = 0;
 void lcd_loop(void) {
   nexLoop(nex_listen_list);
 
@@ -161,25 +162,45 @@ void lcd_loop(void) {
     page_change_to(PAGE_MAIN);
   }
 
+
   if (curr_page == PAGE_MAIN) {
-    checkFlicker(MAX_ENTR);
-    checkFlicker(MIN_ENTR);
-    checkFlicker(MAX_MASS);
-    checkFlicker(MIN_MASS);
-    checkFlicker(PALHA_LENHA);
+    int localFlickerCounter;
+
+    if (flickerCounter == 0) {
+      if (localFlickerCounter == 0) checkFlicker(MAX_ENTR);
+      if (localFlickerCounter == 1) checkFlicker(MIN_ENTR);
+      if (localFlickerCounter == 2) checkFlicker(MAX_MASS);
+      if (localFlickerCounter == 3) checkFlicker(MIN_MASS);
+      if (localFlickerCounter == 4) checkFlicker(PALHA_LENHA);
+    }
+
+    flickerCounter++;
+    localFlickerCounter = flickerCounter % 5;
+    flickerCounter = flickerCounter % 10;
+    delay(100);
   }
 }
 
+int maxEntrFlickerCounter = 0;
+int minEntrFlickerCounter = 0;
+int maxMassFlickerCounter = 0;
+int minMassFlickerCounter = 0;
 void checkFlicker(state_prefs_t op) {
   uint32_t stateValue;
   uint32_t lcdValue;
-  int flickerCounter = 0;
 
   for (int i = 0; i < 10; i++) {
     stateValue = state_manager_get(op);
     switch (op) {
       case PALHA_LENHA:
-        btnPLNex.getValue(&lcdValue);
+        uint32_t picID;
+        btnPLNex.Get_background_image_pic(&picID);
+
+        if (picID == 8) {
+          lcdValue = 0;
+        } else {
+          lcdValue = 1;
+        }
         break;
 
       case MAX_ENTR:
@@ -204,16 +225,55 @@ void checkFlicker(state_prefs_t op) {
 
 
 
-    if (lcdValue != stateValue) {
-      flickerCounter++;
+    switch (op) {
+      case MAX_ENTR:
+        if (lcdValue != stateValue) {
+          maxEntrFlickerCounter++;
 
-      if (flickerCounter > 7) {
-        flickerCounter = 0;
-        state_manager_set(op, lcdValue);
-      }
-    } else {
-      break;
+          if (maxEntrFlickerCounter > 7) {
+            maxEntrFlickerCounter = 0;
+            state_manager_set(op, lcdValue);
+          }
+        }
+        break;
+
+      case MIN_ENTR:
+        if (lcdValue != stateValue) {
+          minEntrFlickerCounter++;
+
+          if (minEntrFlickerCounter > 7) {
+            minEntrFlickerCounter = 0;
+            state_manager_set(op, lcdValue);
+          }
+        }
+        break;
+
+      case MAX_MASS:
+        if (lcdValue != stateValue) {
+          maxMassFlickerCounter++;
+
+          if (maxMassFlickerCounter > 7) {
+            maxMassFlickerCounter = 0;
+            state_manager_set(op, lcdValue);
+          }
+        }
+        break;
+
+      case MIN_MASS:
+        if (lcdValue != stateValue) {
+          minMassFlickerCounter++;
+
+          if (minMassFlickerCounter > 7) {
+            minMassFlickerCounter = 0;
+            state_manager_set(op, lcdValue);
+          }
+        }
+        break;
+
+      default:
+        break;
     }
+
   }
 }
 
@@ -235,7 +295,7 @@ void page_change_to(lcd_page_t page) {
         maxMassTempNex.setValue(state_manager_get(MAX_MASS));
         minMassTempNex.setValue(state_manager_get(MIN_MASS));
 
-        btnPLNex.setValue(state_manager_get(PALHA_LENHA));
+        updatePLBtn(state_manager_get(PALHA_LENHA));
         break;
 
       case PAGE_MASS_HI:
@@ -386,30 +446,32 @@ void btnPlusMinMassPopCB(void *ptr) {
 
 void btnPLPushCB(void *ptr) {
   Serial.println("PUSH");
-  uint32_t value;
-  btnPLNex.getValue(&value);
+  uint32_t currState = state_manager_get(PALHA_LENHA);
+  bool result;
 
-  if (value == 0 || value == 1) {
-    state_manager_set(PALHA_LENHA, value);
+  if (currState == 0) {
+    result = updatePLBtn(1);
+    if (result)
+      state_manager_set(PALHA_LENHA, 1);
+
+//    Serial.print("result");
+//    Serial.println(result);
+  } else {
+    result = updatePLBtn(0);
+    if (result)
+      state_manager_set(PALHA_LENHA, 0);
+
+//    Serial.print("result");
+//    Serial.println(result);
   }
-  Serial.println(value);
-  blockUpdate = true;
 }
 
-void btnPLPopCB(void *ptr) {
-  uint32_t value;
-  btnPLNex.getValue(&value);
-
-  if (value == 0 || value == 1) {
-    state_manager_set(PALHA_LENHA, value);
+bool updatePLBtn(uint32_t value) {
+  if (value == 0) {
+    return btnPLNex.Set_background_image_pic(8) && btnPLNex.Set_press_background_image_pic2(8);
+  } else {
+    return btnPLNex.Set_background_image_pic(5) && btnPLNex.Set_press_background_image_pic2(5);
   }
-  Serial.print("POP ");
-  Serial.println(value);
-  //  if(state_manager_get(PALHA_LENHA) == 0) {
-  //    state_manager_set(PALHA_LENHA, 1);
-  //  } else {
-  //    state_manager_set(PALHA_LENHA, 0);
-  //  }
 }
 
 void btnMuteEntrHICB(void *ptr) {
