@@ -215,21 +215,21 @@ void handleLEDsAndIsAware() {
 }
 
 void handleQueimador() {
-  Serial.print("PalhaLenhaPerif: ");
-  Serial.print(palhaLenhaPerif);
-
-  uint32_t value;
-  btnPLNex.getValue(&value);
-  Serial.print(" PalhaLenha NEXTION: ");
-  Serial.print(value);
-  
-  Serial.print(" Should Turn on: ");
-  Serial.print(entrTempPerif < maxEntrTempPerif && massTempPerif < maxMassTempPerif);
-
-  Serial.print(" Is on?: ");
-  Serial.print(queimadorIsOn);
-
-  Serial.println("");
+//  Serial.print("PalhaLenhaPerif: ");
+//  Serial.print(palhaLenhaPerif);
+//
+//  uint32_t value;
+//  btnPLNex.getValue(&value);
+//  Serial.print(" PalhaLenha NEXTION: ");
+//  Serial.print(value);
+//  
+//  Serial.print(" Should Turn on: ");
+//  Serial.print(entrTempPerif < maxEntrTempPerif && massTempPerif < maxMassTempPerif);
+//
+//  Serial.print(" Is on?: ");
+//  Serial.print(queimadorIsOn);
+//
+//  Serial.println("");
   
   if (palhaLenhaPerif == 0) {
     if (entrTempPerif < maxEntrTempPerif && massTempPerif < maxMassTempPerif) {

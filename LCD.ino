@@ -141,7 +141,7 @@ void lcd_setup(void) {
 }
 
 
-
+int flickerCounter = 0;
 void lcd_loop(void) {
   nexLoop(nex_listen_list);
 
@@ -169,8 +169,14 @@ void lcd_loop(void) {
     btnPLNex.getValue(&palhaLenhaLCD);
 
     if (palhaLenhaLCD != palhaLenhaState) {
-      if (palhaLenhaLCD == 0 || palhaLenhaLCD == 1)
-        state_manager_set(PALHA_LENHA, palhaLenhaLCD);
+      if (palhaLenhaLCD == 0 || palhaLenhaLCD == 1) {
+        flickerCounter++;
+
+        if(flickerCounter > 5) {
+          state_manager_set(PALHA_LENHA, palhaLenhaLCD); 
+          flickerCounter = 0;
+        }
+      }
     }
   }
 }
