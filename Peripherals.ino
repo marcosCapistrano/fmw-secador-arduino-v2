@@ -161,16 +161,25 @@ void handleAlarme() {
 void handleLEDsAndIsAware() {
   if (entrTempPerif > maxEntrTempPerif) {
     if (!ledEntrQuenteIsOn) {
+//      Serial.println("Turning ON Led ENTR QUENTE");
       digitalWrite(LED_ENTRADA_QUENTE, LOW);
       ledEntrQuenteIsOn = true;
     }
+
+    if (ledEntrFrioIsOn) {
+//      Serial.println("Turning OFF Led ENTR QUENTE");
+      digitalWrite(LED_ENTRADA_FRIO, HIGH);
+      ledEntrFrioIsOn = false;
+    }    
   } else if (minEntrTempPerif <= entrTempPerif && entrTempPerif <= maxEntrTempPerif) {
     if (ledEntrQuenteIsOn) {
+//      Serial.println("Turning OFF Led ENTR QUENTE");
       digitalWrite(LED_ENTRADA_QUENTE, HIGH);
       ledEntrQuenteIsOn = false;
     }
 
     if (ledEntrFrioIsOn) {
+//      Serial.println("Turning OFF Led ENTR QUENTE");
       digitalWrite(LED_ENTRADA_FRIO, HIGH);
       ledEntrFrioIsOn = false;
     }
@@ -181,23 +190,39 @@ void handleLEDsAndIsAware() {
     }
   } else {
     if (!ledEntrFrioIsOn) {
+//      Serial.println("Turning ON Led ENTR FRIO");
       digitalWrite(LED_ENTRADA_FRIO, LOW);
       ledEntrFrioIsOn = true;
+    }
+
+    if (ledEntrQuenteIsOn) {
+//      Serial.println("Turning OFF Led ENTR QUENTE");
+      digitalWrite(LED_ENTRADA_QUENTE, HIGH);
+      ledEntrQuenteIsOn = false;
     }
   }
 
   if (massTempPerif > maxMassTempPerif) {
     if (!ledMassQuenteIsOn) {
+//      Serial.println("Turning ON Led MASSA QUENTE");
       digitalWrite(LED_MASSA_QUENTE, LOW);
       ledMassQuenteIsOn = true;
     }
+
+    if (ledMassFrioIsOn) {
+//      Serial.println("Turning OFF Led MASSA FRIO");
+      digitalWrite(LED_MASSA_FRIO, HIGH);
+      ledMassFrioIsOn = false;
+    }
   } else if (minMassTempPerif <= massTempPerif && massTempPerif <= maxMassTempPerif) {
     if (ledMassQuenteIsOn) {
+//      Serial.println("Turning OFF Led MASSA QUENTE");
       digitalWrite(LED_MASSA_QUENTE, HIGH);
       ledMassQuenteIsOn = false;
     }
 
     if (ledMassFrioIsOn) {
+//      Serial.println("Turning OFF Led MASSA FRIO");
       digitalWrite(LED_MASSA_FRIO, HIGH);
       ledMassFrioIsOn = false;
     }
@@ -208,8 +233,15 @@ void handleLEDsAndIsAware() {
     }
   } else {
     if (!ledMassFrioIsOn) {
+//      Serial.println("Turning On Led MASSA FRIO");
       digitalWrite(LED_MASSA_FRIO, LOW);
       ledMassFrioIsOn = true;
+    }
+
+    if (ledMassQuenteIsOn) {
+//      Serial.println("Turning OFF Led MASSA QUENTE");
+      digitalWrite(LED_MASSA_QUENTE, HIGH);
+      ledMassQuenteIsOn = false;
     }
   }
 }
@@ -244,7 +276,7 @@ void handleQueimador() {
         queimadorIsOn = false;
       }
     }
-  } else {
+  } else if(palhaLenhaPerif == 1) {
     if (queimadorIsOn) {
       digitalWrite(OUT_QUEIMADOR, LOW);
       queimadorIsOn = false;

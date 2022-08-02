@@ -211,7 +211,7 @@ void checkFlicker(state_prefs_t op) {
 
         if(picID == 8) {
           lcdValue = 0;
-        } else {
+        } else if(picID == 5) {
           lcdValue = 1;
         }
         break;
@@ -460,7 +460,7 @@ void btnPlusMinMassPopCB(void *ptr) {
 }
 
 void btnPLPushCB(void *ptr) {
-  Serial.println("PUSH");
+//  Serial.println("PUSH");
   uint32_t currState = state_manager_get(PALHA_LENHA);
   bool result;
 
@@ -471,7 +471,7 @@ void btnPLPushCB(void *ptr) {
 
 //    Serial.print("result");
 //    Serial.println(result);
-  } else {
+  } else if (currState == 1) {
     result = updatePLBtn(0);
     if (result)
       state_manager_set(PALHA_LENHA, 0);
@@ -483,7 +483,7 @@ void btnPLPushCB(void *ptr) {
 
 
 void btnPLPopCB(void *ptr) {
-  Serial.println("POP!");
+//  Serial.println("POP!");
 }
 
 
@@ -492,7 +492,7 @@ bool updatePLBtn(uint32_t value) {
     if(btnPLNex.Set_background_image_pic(8)) {
       return btnPLNex.Set_press_background_image_pic2(8);
     }
-  } else {
+  } else if(value == 1) {
     if(btnPLNex.Set_background_image_pic(5)) {
       return btnPLNex.Set_press_background_image_pic2(5);  
     }
