@@ -8,7 +8,7 @@ NexPage pageEntrHI = NexPage(4, 0, "page4");                 //--> Tela entrada 
 NexPage pageEntrLO = NexPage(5, 0, "page5");                 //--> Tela entrada abaixo
 NexPage pageMassLO = NexPage(3, 0, "page3");                 //--> Tela massa abaixo
 
-NexDSButton btnPLNex = NexDSButton(1, 1, "bt0");                                //--> Palha/lenha
+NexButton btnPLNex = NexButton(1, 23, "b0");                                //--> Palha/lenha
 
 NexButton btnMuteEntrHI = NexButton(4, 1, "b0");
 NexButton btnMuteEntrLO = NexButton(5, 1, "b0");
@@ -45,14 +45,6 @@ NexNumber minMassTempNex = NexNumber(1, 15, "n3");
 
 NexTouch *nex_listen_list[] =
 {
-  &btnMinusMaxEntrNex,
-  &btnPlusMaxEntrNex,
-  &btnMinusMinEntrNex,
-  &btnPlusMinEntrNex,
-  &btnMinusMaxMassNex,
-  &btnPlusMaxMassNex,
-  &btnMinusMinMassNex,
-  &btnPlusMinMassNex,
   &btnPLNex,
   &btnMuteEntrHI,
   &btnMuteEntrLO,
@@ -61,23 +53,8 @@ NexTouch *nex_listen_list[] =
   NULL
 };
 
-//blockUpdate existe para bloquear atualizações na tela que acontecam enquanto o cara ta aumentando algum numero de max/min,
-//se nao tivesse isso, quando a tela atualizasse por causa de alguma mudança de temperatura, iria zerar o numero que o cara tava colocando
-bool blockUpdate = false;
-
 // Forward refs
-void btnMinusMaxEntrCB(void *ptr);
-void btnPlusMaxEntrCB(void *ptr);
-void btnMinusMinEntrCB(void *ptr);
-void btnPlusMinEntrCB(void *ptr);
-
-void btnMinusMaxMassCB(void *ptr);
-void btnPlusMaxMassCB(void *ptr);
-void btnMinusMinMassCB(void *ptr);
-void btnPlusMinMassCB(void *ptr);
-
 void btnPLPushCB(void *ptr);
-void btnPLPopCB(void *ptr);
 
 void btnMuteEntrHICB(void *ptr);
 void btnMuteEntrLOCB(void *ptr);
@@ -85,6 +62,7 @@ void btnMuteMassHICB(void *ptr);
 void btnMuteMassLOCB(void *ptr);
 
 void checkFlicker(state_prefs_t op);
+
 /*
    ------------------------------------------------------------------------------------------------------------------------
 */
@@ -105,32 +83,7 @@ lcd_page_t curr_page = PAGE_INIT;
 void lcd_setup(void) {
   nexInit();
 
-  //  btnMinusMaxEntrNex.attachPush(btnMinusMaxEntrPushCB, &btnMinusMaxEntrNex);
-  //  btnMinusMaxEntrNex.attachPop(btnMinusMaxEntrPopCB, &btnMinusMaxEntrNex);
-  //
-  //  btnPlusMaxEntrNex.attachPush(btnPlusMaxEntrPushCB, &btnPlusMaxEntrNex);
-  //  btnPlusMaxEntrNex.attachPop(btnPlusMaxEntrPopCB, &btnPlusMaxEntrNex);
-  //
-  //  btnMinusMinEntrNex.attachPush(btnMinusMinEntrPushCB, &btnMinusMinEntrNex);
-  //  btnMinusMinEntrNex.attachPop(btnMinusMinEntrPopCB, &btnMinusMinEntrNex);
-  //
-  //  btnPlusMinEntrNex.attachPush(btnPlusMinEntrPushCB, &btnPlusMinEntrNex);
-  //  btnPlusMinEntrNex.attachPop(btnPlusMinEntrPopCB, &btnPlusMinEntrNex);
-  //
-  //  btnMinusMaxMassNex.attachPush(btnMinusMaxMassPushCB, &btnMinusMaxMassNex);
-  //  btnMinusMaxMassNex.attachPop(btnMinusMaxMassPopCB, &btnMinusMaxMassNex);
-  //
-  //  btnPlusMaxMassNex.attachPush(btnPlusMaxMassPushCB, &btnPlusMaxMassNex);
-  //  btnPlusMaxMassNex.attachPop(btnPlusMaxMassPopCB, &btnPlusMaxMassNex);
-  //
-  //  btnMinusMinMassNex.attachPush(btnMinusMinMassPushCB, &btnMinusMinMassNex);
-  //  btnMinusMinMassNex.attachPop(btnMinusMinMassPopCB, &btnMinusMinMassNex);
-  //
-  //  btnPlusMinMassNex.attachPush(btnPlusMinMassPushCB, &btnPlusMinMassNex);
-  //  btnPlusMinMassNex.attachPop(btnPlusMinMassPopCB, &btnPlusMinMassNex);
-  //
-  //  btnPLNex.attachPush(btnPLPushCB, &btnPLNex);
-  //  btnPLNex.attachPop(btnPLPopCB, &btnPLNex);
+  btnPLNex.attachPush(btnPLPushCB, &btnPLNex);
 
   btnMuteEntrHI.attachPush(btnMuteEntrHICB, &btnMuteEntrHI);
   btnMuteEntrLO.attachPush(btnMuteEntrLOCB, &btnMuteEntrLO);
@@ -138,6 +91,7 @@ void lcd_setup(void) {
   btnMuteMassLO.attachPush(btnMuteMassLOCB, &btnMuteMassLO);
 
   delay(3000);
+
   page_change_to(PAGE_MAIN);
 }
 
@@ -148,16 +102,16 @@ void lcd_loop(void) {
     //    println("Changing to ENTRHI");
     page_change_to(PAGE_ENTR_HI);
   } else if (state_manager_get(TEMP_ENTR) != 0 && state_manager_get(TEMP_ENTR) <= safe_subtraction(state_manager_get(MIN_ENTR), HIST_ENTR) && !state_manager_get(IS_AWARE_ENTR)) {
-    //    Serial.println("Changing to ENTRLO");
+    //    // Serial.println"Changing to ENTRLO");
     page_change_to(PAGE_ENTR_LO);
   } else if (state_manager_get(TEMP_MASS) >= (state_manager_get(MAX_MASS) + HIST_MASS) && !state_manager_get(IS_AWARE_MASS)) {
-    //    Serial.println("Changing to MASSHI");
+    //    // Serial.println"Changing to MASSHI");
     page_change_to(PAGE_MASS_HI);
   } else if (state_manager_get(TEMP_MASS) != 0 && state_manager_get(TEMP_MASS) <= safe_subtraction(state_manager_get(MIN_MASS), HIST_MASS) && !state_manager_get(IS_AWARE_MASS)) {
-    //    Serial.println("Changing to MASSLO");
+    //    // Serial.println"Changing to MASSLO");
     page_change_to(PAGE_MASS_LO);
   } else {
-    //    Serial.println("Changing to MAIN");
+    //    // Serial.println"Changing to MAIN");
     page_change_to(PAGE_MAIN);
   }
 
@@ -166,63 +120,104 @@ void lcd_loop(void) {
     checkFlicker(MIN_ENTR);
     checkFlicker(MAX_MASS);
     checkFlicker(MIN_MASS);
-    checkFlicker(PALHA_LENHA);
+    //    checkFlicker(PALHA_LENHA);
   }
 }
 
+
+int maxEntrFlickerCounter = 0;
+int minEntrFlickerCounter = 0;
+int maxMassFlickerCounter = 0;
+int minMassFlickerCounter = 0;
 void checkFlicker(state_prefs_t op) {
   uint32_t stateValue;
   uint32_t lcdValue;
-  int flickerCounter = 0;
 
-  for (int i = 0; i < 10; i++) {
-    stateValue = state_manager_get(op);
-    switch (op) {
-      case PALHA_LENHA:
-        btnPLNex.getValue(&lcdValue);
-        break;
+  stateValue = state_manager_get(op);
 
-      case MAX_ENTR:
-        maxEntrTempNex.getValue(&lcdValue);
-        break;
-
-      case MIN_ENTR:
-        minEntrTempNex.getValue(&lcdValue);
-        break;
-
-      case MAX_MASS:
-        maxMassTempNex.getValue(&lcdValue);
-        break;
-
-      case MIN_MASS:
-        minMassTempNex.getValue(&lcdValue);
-        break;
-
-      default:
-        break;
-    }
-
-
-
-    if (lcdValue != stateValue) {
-      flickerCounter++;
-
-      if (flickerCounter > 7) {
-        flickerCounter = 0;
-        state_manager_set(op, lcdValue);
-      }
-    } else {
+  switch (op) {
+    case MAX_ENTR:
+      maxEntrTempNex.getValue(&lcdValue);
       break;
-    }
+
+    case MIN_ENTR:
+      minEntrTempNex.getValue(&lcdValue);
+      break;
+
+    case MAX_MASS:
+      maxMassTempNex.getValue(&lcdValue);
+      break;
+
+    case MIN_MASS:
+      minMassTempNex.getValue(&lcdValue);
+      break;
+
+    default:
+      break;
   }
+
+  switch (op) {
+    case MAX_ENTR:
+      if (lcdValue != stateValue) {
+        maxEntrFlickerCounter++;
+
+        if (maxEntrFlickerCounter > 7) {
+          maxEntrFlickerCounter = 0;
+          state_manager_set(op, lcdValue);
+        }
+      }
+      break;
+
+    case MIN_ENTR:
+      if (lcdValue != stateValue) {
+        minEntrFlickerCounter++;
+
+        if (minEntrFlickerCounter > 7) {
+          minEntrFlickerCounter = 0;
+          state_manager_set(op, lcdValue);
+        }
+      }
+      break;
+
+    case MAX_MASS:
+      if (lcdValue != stateValue) {
+        maxMassFlickerCounter++;
+
+        if (maxMassFlickerCounter > 7) {
+          maxMassFlickerCounter = 0;
+          state_manager_set(op, lcdValue);
+        }
+      }
+      break;
+
+    case MIN_MASS:
+      if (lcdValue != stateValue) {
+        minMassFlickerCounter++;
+
+        if (minMassFlickerCounter > 7) {
+          minMassFlickerCounter = 0;
+          state_manager_set(op, lcdValue);
+        }
+      }
+      break;
+
+    default:
+      break;
+  }
+
+
 }
 
 void page_change_to(lcd_page_t page) {
+  bool result;
   if (curr_page != page) {
     switch (page) {
       case PAGE_MAIN:
-        pageMain.show();
-
+        while ((result = pageMain.show()) != true) {
+          Serial.println("Retrying pageMain");
+          delay(1000);
+        }
+        curr_page = page;
         itoa(state_manager_get(TEMP_ENTR), entrTempStr, 10);
         entrTempNex.setText(entrTempStr);
 
@@ -230,36 +225,73 @@ void page_change_to(lcd_page_t page) {
         massTempNex.setText(massTempStr);
 
 
-        maxEntrTempNex.setValue(state_manager_get(MAX_ENTR));
-        minEntrTempNex.setValue(state_manager_get(MIN_ENTR));
-        maxMassTempNex.setValue(state_manager_get(MAX_MASS));
-        minMassTempNex.setValue(state_manager_get(MIN_MASS));
+        while ((result = maxEntrTempNex.setValue(state_manager_get(MAX_ENTR))) != true) {
+          Serial.println("Retrying maxEntr");
+          delay(1000);
+        }
 
-        btnPLNex.setValue(state_manager_get(PALHA_LENHA));
+        while ((result = minEntrTempNex.setValue(state_manager_get(MIN_ENTR))) != true) {
+          Serial.println("Retrying minEntr");
+          delay(1000);
+        }
+        while ((result = maxMassTempNex.setValue(state_manager_get(MAX_MASS))) != true) {
+           Serial.println("Retrying maxMass");
+          delay(1000);
+        }
+        while ((result = minMassTempNex.setValue(state_manager_get(MIN_MASS))) != true) {
+          Serial.println("Retrying minMass");
+          delay(1000);
+        }
+
+        while ((result = updatePLBtn(state_manager_get(PALHA_LENHA))) != true) {
+           Serial.println("Retrying updatebTNPL");
+          delay(1000);
+        }
         break;
 
       case PAGE_MASS_HI:
-        pageMassHI.show();
+        while ((result = pageMassHI.show()) != true) {
+          Serial.println("Retrying pageMassHI");
+          delay(1000);
+        }
+        curr_page = page;
         break;
 
       case PAGE_MASS_LO:
-        pageMassLO.show();
+        while ((result = pageMassLO.show()) != true) {
+          Serial.println("Retrying pageMassLO");
+          // Serial.print"Result: ");
+          // Serial.printlnresult);
+          delay(1000);
+        }
+        curr_page = page;
         break;
 
       case PAGE_ENTR_HI:
-        pageEntrHI.show();
+        while ((result = pageEntrHI.show()) != true) {
+          Serial.println("Retrying pageEntrHI");
+          // Serial.print"Result: ");
+          // Serial.printlnresult);
+          delay(1000);
+        }
+        curr_page = page;
         break;
 
       case PAGE_ENTR_LO:
-        pageEntrLO.show();
+        while ((result = pageEntrLO.show()) != true) {
+          Serial.println("Retrying pageEntrLO");
+          // Serial.print"Result: ");
+          // Serial.printlnresult);
+          delay(1000);
+        }
+        curr_page = page;
         break;
     }
-    curr_page = page;
+
   }
 }
 
 void lcd_trigger_update(state_prefs_t op) {
-  //  if (!blockUpdate) {
   if (curr_page == PAGE_MAIN) {
     if (op == TEMP_ENTR) {
       itoa(state_manager_get(TEMP_ENTR), entrTempStr, 10);
@@ -269,165 +301,48 @@ void lcd_trigger_update(state_prefs_t op) {
       massTempNex.setText(massTempStr);
     }
   }
-  //  }
-}
-
-void btnMinusMaxEntrPushCB(void *ptr) {
-  //  Serial.println("PUSH");
-  blockUpdate = true;
-}
-
-void btnMinusMaxEntrPopCB(void *ptr) {
-  //  Serial.println("PUSH");
-  uint32_t value;
-  maxEntrTempNex.getValue(&value);
-
-  state_manager_set(MAX_ENTR, value);
-  blockUpdate = false;
-}
-
-void btnPlusMaxEntrPushCB(void *ptr) {
-  //  Serial.println("PUSH");
-  blockUpdate = true;
-}
-
-void btnPlusMaxEntrPopCB(void *ptr) {
-  //  Serial.println("POP");
-  uint32_t value;
-  maxEntrTempNex.getValue(&value);
-
-  state_manager_set(MAX_ENTR, value);
-  blockUpdate = false;
-}
-
-void btnMinusMinEntrPushCB(void *ptr) {
-  //  Serial.println("PUSH");
-  blockUpdate = true;
-}
-
-void btnMinusMinEntrPopCB(void *ptr) {
-  //  Serial.println("POP");
-  uint32_t value;
-  minEntrTempNex.getValue(&value);
-
-  state_manager_set(MIN_ENTR, value);
-  blockUpdate = false;
-}
-
-void btnPlusMinEntrPushCB(void *ptr) {
-  //  Serial.println("PUSH");
-  blockUpdate = true;
-}
-
-void btnPlusMinEntrPopCB(void *ptr) {
-  //  Serial.println("POP");
-  uint32_t value;
-  minEntrTempNex.getValue(&value);
-
-  state_manager_set(MIN_ENTR, value);
-  blockUpdate = false;
-}
-
-void btnMinusMaxMassPushCB(void *ptr) {
-  //  Serial.println("PUSH");
-  blockUpdate = true;
-}
-
-void btnMinusMaxMassPopCB(void *ptr) {
-  //  Serial.println("POP");
-  uint32_t value;
-  maxMassTempNex.getValue(&value);
-
-  state_manager_set(MAX_MASS, value);
-  blockUpdate = false;
-}
-
-void btnPlusMaxMassPushCB(void *ptr) {
-  //  Serial.println("PUSH");
-  blockUpdate = true;
-}
-
-void btnPlusMaxMassPopCB(void *ptr) {
-  //  Serial.println("POP");
-  uint32_t value;
-  maxMassTempNex.getValue(&value);
-
-  state_manager_set(MAX_MASS, value);
-  blockUpdate = false;
-}
-
-void btnMinusMinMassPushCB(void *ptr) {
-  //  Serial.println("PUSH");
-  blockUpdate = true;
-}
-
-void btnMinusMinMassPopCB(void *ptr) {
-  //  Serial.println("POP");
-  uint32_t value;
-  minMassTempNex.getValue(&value);
-
-  state_manager_set(MIN_MASS, value);
-  blockUpdate = false;
-}
-
-void btnPlusMinMassPushCB(void *ptr) {
-  //  Serial.println("PUSH");
-  blockUpdate = true;
-}
-
-void btnPlusMinMassPopCB(void *ptr) {
-  //  Serial.println("POP");
-  uint32_t value;
-  minMassTempNex.getValue(&value);
-
-  state_manager_set(MIN_MASS, value);
-  blockUpdate = false;
 }
 
 void btnPLPushCB(void *ptr) {
-  Serial.println("PUSH");
-  uint32_t value;
-  btnPLNex.getValue(&value);
+  //  // Serial.println"PUSH");
+  uint32_t currState = state_manager_get(PALHA_LENHA);
+  bool result;
 
-  if (value == 0 || value == 1) {
-    state_manager_set(PALHA_LENHA, value);
+  if (currState == 0) {
+    result = updatePLBtn(1);
+    if (result)
+      state_manager_set(PALHA_LENHA, 1);
+  } else {
+    result = updatePLBtn(0);
+    if (result)
+      state_manager_set(PALHA_LENHA, 0);
   }
-  Serial.println(value);
-  blockUpdate = true;
 }
 
-void btnPLPopCB(void *ptr) {
-  uint32_t value;
-  btnPLNex.getValue(&value);
-
-  if (value == 0 || value == 1) {
-    state_manager_set(PALHA_LENHA, value);
+bool updatePLBtn(uint32_t value) {
+  if (value == 0) {
+    return btnPLNex.Set_background_image_pic(8) && btnPLNex.Set_press_background_image_pic2(8);
+  } else {
+    return btnPLNex.Set_background_image_pic(5) && btnPLNex.Set_press_background_image_pic2(5);
   }
-  Serial.print("POP ");
-  Serial.println(value);
-  //  if(state_manager_get(PALHA_LENHA) == 0) {
-  //    state_manager_set(PALHA_LENHA, 1);
-  //  } else {
-  //    state_manager_set(PALHA_LENHA, 0);
-  //  }
 }
 
 void btnMuteEntrHICB(void *ptr) {
-  state_manager_set(IS_AWARE_ENTR, 1);
   page_change_to(PAGE_MAIN);
+  state_manager_set(IS_AWARE_ENTR, 1);
 }
 
 void btnMuteEntrLOCB(void *ptr) {
-  state_manager_set(IS_AWARE_ENTR, 1);
   page_change_to(PAGE_MAIN);
+  state_manager_set(IS_AWARE_ENTR, 1);
 }
 
 void btnMuteMassHICB(void *ptr) {
-  state_manager_set(IS_AWARE_MASS, 1);
   page_change_to(PAGE_MAIN);
+  state_manager_set(IS_AWARE_MASS, 1);
 }
 
 void btnMuteMassLOCB(void *ptr) {
-  state_manager_set(IS_AWARE_MASS, 1);
   page_change_to(PAGE_MAIN);
+  state_manager_set(IS_AWARE_MASS, 1);
 }
