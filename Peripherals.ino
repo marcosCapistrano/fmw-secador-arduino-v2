@@ -1,5 +1,5 @@
-#define OUT_QUEIMADOR       12
-#define OUT_BUZINA          13
+#define OUT_QUEIMADOR       13
+#define OUT_BUZINA          12
 #define LED_MASSA_QUENTE     4
 #define LED_MASSA_FRIO       5
 #define LED_ENTRADA_QUENTE   2

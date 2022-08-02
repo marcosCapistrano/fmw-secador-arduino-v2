@@ -105,32 +105,32 @@ lcd_page_t curr_page = PAGE_INIT;
 void lcd_setup(void) {
   nexInit();
 
-  btnMinusMaxEntrNex.attachPush(btnMinusMaxEntrPushCB, &btnMinusMaxEntrNex);
-  btnMinusMaxEntrNex.attachPop(btnMinusMaxEntrPopCB, &btnMinusMaxEntrNex);
-
-  btnPlusMaxEntrNex.attachPush(btnPlusMaxEntrPushCB, &btnPlusMaxEntrNex);
-  btnPlusMaxEntrNex.attachPop(btnPlusMaxEntrPopCB, &btnPlusMaxEntrNex);
-
-  btnMinusMinEntrNex.attachPush(btnMinusMinEntrPushCB, &btnMinusMinEntrNex);
-  btnMinusMinEntrNex.attachPop(btnMinusMinEntrPopCB, &btnMinusMinEntrNex);
-
-  btnPlusMinEntrNex.attachPush(btnPlusMinEntrPushCB, &btnPlusMinEntrNex);
-  btnPlusMinEntrNex.attachPop(btnPlusMinEntrPopCB, &btnPlusMinEntrNex);
-
-  btnMinusMaxMassNex.attachPush(btnMinusMaxMassPushCB, &btnMinusMaxMassNex);
-  btnMinusMaxMassNex.attachPop(btnMinusMaxMassPopCB, &btnMinusMaxMassNex);
-
-  btnPlusMaxMassNex.attachPush(btnPlusMaxMassPushCB, &btnPlusMaxMassNex);
-  btnPlusMaxMassNex.attachPop(btnPlusMaxMassPopCB, &btnPlusMaxMassNex);
-
-  btnMinusMinMassNex.attachPush(btnMinusMinMassPushCB, &btnMinusMinMassNex);
-  btnMinusMinMassNex.attachPop(btnMinusMinMassPopCB, &btnMinusMinMassNex);
-
-  btnPlusMinMassNex.attachPush(btnPlusMinMassPushCB, &btnPlusMinMassNex);
-  btnPlusMinMassNex.attachPop(btnPlusMinMassPopCB, &btnPlusMinMassNex);
-
-  btnPLNex.attachPush(btnPLPushCB, &btnPLNex);
-  btnPLNex.attachPop(btnPLPopCB, &btnPLNex);
+  //  btnMinusMaxEntrNex.attachPush(btnMinusMaxEntrPushCB, &btnMinusMaxEntrNex);
+  //  btnMinusMaxEntrNex.attachPop(btnMinusMaxEntrPopCB, &btnMinusMaxEntrNex);
+  //
+  //  btnPlusMaxEntrNex.attachPush(btnPlusMaxEntrPushCB, &btnPlusMaxEntrNex);
+  //  btnPlusMaxEntrNex.attachPop(btnPlusMaxEntrPopCB, &btnPlusMaxEntrNex);
+  //
+  //  btnMinusMinEntrNex.attachPush(btnMinusMinEntrPushCB, &btnMinusMinEntrNex);
+  //  btnMinusMinEntrNex.attachPop(btnMinusMinEntrPopCB, &btnMinusMinEntrNex);
+  //
+  //  btnPlusMinEntrNex.attachPush(btnPlusMinEntrPushCB, &btnPlusMinEntrNex);
+  //  btnPlusMinEntrNex.attachPop(btnPlusMinEntrPopCB, &btnPlusMinEntrNex);
+  //
+  //  btnMinusMaxMassNex.attachPush(btnMinusMaxMassPushCB, &btnMinusMaxMassNex);
+  //  btnMinusMaxMassNex.attachPop(btnMinusMaxMassPopCB, &btnMinusMaxMassNex);
+  //
+  //  btnPlusMaxMassNex.attachPush(btnPlusMaxMassPushCB, &btnPlusMaxMassNex);
+  //  btnPlusMaxMassNex.attachPop(btnPlusMaxMassPopCB, &btnPlusMaxMassNex);
+  //
+  //  btnMinusMinMassNex.attachPush(btnMinusMinMassPushCB, &btnMinusMinMassNex);
+  //  btnMinusMinMassNex.attachPop(btnMinusMinMassPopCB, &btnMinusMinMassNex);
+  //
+  //  btnPlusMinMassNex.attachPush(btnPlusMinMassPushCB, &btnPlusMinMassNex);
+  //  btnPlusMinMassNex.attachPop(btnPlusMinMassPopCB, &btnPlusMinMassNex);
+  //
+  //  btnPLNex.attachPush(btnPLPushCB, &btnPLNex);
+  //  btnPLNex.attachPop(btnPLPopCB, &btnPLNex);
 
   btnMuteEntrHI.attachPush(btnMuteEntrHICB, &btnMuteEntrHI);
   btnMuteEntrLO.attachPush(btnMuteEntrLOCB, &btnMuteEntrLO);
@@ -170,44 +170,49 @@ void lcd_loop(void) {
   }
 }
 
-int flickerCounter = 0;
 void checkFlicker(state_prefs_t op) {
-  uint32_t stateValue = state_manager_get(op);
+  uint32_t stateValue;
   uint32_t lcdValue;
+  int flickerCounter = 0;
 
-  switch (op) {
-    case PALHA_LENHA:
-      btnPLNex.getValue(&lcdValue);
+  for (int i = 0; i < 10; i++) {
+    stateValue = state_manager_get(op);
+    switch (op) {
+      case PALHA_LENHA:
+        btnPLNex.getValue(&lcdValue);
+        break;
+
+      case MAX_ENTR:
+        maxEntrTempNex.getValue(&lcdValue);
+        break;
+
+      case MIN_ENTR:
+        minEntrTempNex.getValue(&lcdValue);
+        break;
+
+      case MAX_MASS:
+        maxMassTempNex.getValue(&lcdValue);
+        break;
+
+      case MIN_MASS:
+        minMassTempNex.getValue(&lcdValue);
+        break;
+
+      default:
+        break;
+    }
+
+
+
+    if (lcdValue != stateValue) {
+      flickerCounter++;
+
+      if (flickerCounter > 7) {
+        flickerCounter = 0;
+        state_manager_set(op, lcdValue);
+      }
+    } else {
       break;
-
-    case MAX_ENTR:
-      maxEntrTempNex.getValue(&lcdValue);
-      break;
-
-    case MIN_ENTR:
-      minEntrTempNex.getValue(&lcdValue);
-      break;
-
-    case MAX_MASS:
-      maxMassTempNex.getValue(&lcdValue);
-      break;
-
-    case MIN_MASS:
-      minMassTempNex.getValue(&lcdValue);
-      break;
-
-    default:
-      break;
-  }
-
-
-
-  if (lcdValue != stateValue) {
-    flickerCounter++;
-
-    if (flickerCounter > 7) {
-      flickerCounter = 0;
-      state_manager_set(op, lcdValue);
     }
   }
 }
