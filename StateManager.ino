@@ -11,9 +11,9 @@ uint32_t tempEntr = 0;
 uint32_t tempMass = 0;
 
 uint32_t maxEntr = 100;
-uint32_t minEntr = 1;
+uint32_t minEntr = 0;
 uint32_t maxMass = 100;
-uint32_t minMass = 1;
+uint32_t minMass = 0;
 uint32_t palhaLenha = 0;
 uint32_t lastComm = 0;
 uint32_t hasCommOnce = 0;

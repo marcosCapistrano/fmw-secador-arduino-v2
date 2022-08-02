@@ -67,6 +67,7 @@ void peripherals_loop(void) {
     lastReadTempSensor = millis() / 1000;
 
     if (sensor_temp < 0) sensor_temp = 0;
+    if(sensor_temp > 150) sensor_temp = 150;
     state_manager_set(TEMP_ENTR, (uint32_t) sensor_temp);
 
     lcd_trigger_update(TEMP_ENTR);
@@ -214,6 +215,22 @@ void handleLEDsAndIsAware() {
 }
 
 void handleQueimador() {
+  Serial.print("PalhaLenhaPerif: ");
+  Serial.print(palhaLenhaPerif);
+
+  uint32_t value;
+  btnPLNex.getValue(&value);
+  Serial.print(" PalhaLenha NEXTION: ");
+  Serial.print(value);
+  
+  Serial.print(" Should Turn on: ");
+  Serial.print(entrTempPerif < maxEntrTempPerif && massTempPerif < maxMassTempPerif);
+
+  Serial.print(" Is on?: ");
+  Serial.print(queimadorIsOn);
+
+  Serial.println("");
+  
   if (palhaLenhaPerif == 0) {
     if (entrTempPerif < maxEntrTempPerif && massTempPerif < maxMassTempPerif) {
       if (!queimadorIsOn) {
