@@ -1,4 +1,4 @@
-const char *ssid = "CT_24";
+const char *ssid = "CT_33";
 const char *password = "AusyxSolucoes";
 
 WebSocketsServer webSocket = WebSocketsServer(80);
@@ -22,26 +22,6 @@ void server_task(void *pvParameters) {
     webSocket.loop();
     vTaskDelay(100);
   }
-}
-
-void server_setup() {
-  Serial.println();
-  Serial.println("Configurando access point...");
-
-  // You can remove the password parameter if you want the AP to be open.
-  WiFi.softAP(ssid, password);
-  Serial.println(WiFi.status());
-  IPAddress myIP = WiFi.softAPIP();
-  Serial.print("AP IP address: ");
-  Serial.println(myIP);
-  Serial.println("Server started!");
-
-  webSocket.begin();
-  webSocket.onEvent(handle_events);
-}
-
-void server_loop() {
-  webSocket.loop();
 }
 
 void handle_events(uint8_t num, WStype_t type, uint8_t * payload, size_t length) {
