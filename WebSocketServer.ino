@@ -1,4 +1,4 @@
-const char *ssid = "CT_33";
+const char *ssid = "CT_38";
 const char *password = "AusyxSolucoes";
 
 WebSocketsServer webSocket = WebSocketsServer(80);
@@ -31,6 +31,7 @@ void handle_events(uint8_t num, WStype_t type, uint8_t * payload, size_t length)
       break;
     case WStype_CONNECTED:
       {
+        Serial.println("Connected!");
 //        IPAddress ip = webSocket.remoteIP(num);
 //        Serial.printf("[%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
       }
